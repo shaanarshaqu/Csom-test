@@ -15,19 +15,17 @@ namespace TestCsom.Manager
             this.configuration = configuration;
             this.context = new ClientContext(configuration["SharepointInfo:SiteUrl"]);
             this.microsoftAuth=microsoftAuth;
+            context.ExecutingWebRequest += (sender, args) =>
+            {
+                args.WebRequestExecutor.RequestHeaders["Authorization"] =
+                    "Bearer " + microsoftAuth.GetAccessTokenAsync();
+            };
         }
 
         public async Task<dynamic> GetAllData()
         {
             try
-            {
-                string tk = await microsoftAuth.GetAccessTokenAsync();
-                context.ExecutingWebRequest += (sender, args) =>
-                {
-                    args.WebRequestExecutor.RequestHeaders["Authorization"] =
-                        "Bearer " + tk;
-                };
-
+            {                
                 List studentList = context.Web.Lists.GetByTitle("Students");
                 CamlQuery query = new CamlQuery
                 {
