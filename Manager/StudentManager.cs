@@ -7,18 +7,18 @@ namespace TestCsom.Manager
 {
     public class StudentManager:IStudentManager
     {
-        private readonly ClientContext context;
-        private readonly IConfiguration configuration;
-        private readonly MicrosoftAuth microsoftAuth;
+        private readonly ClientContext _context;
+        private readonly IConfiguration _configuration;
+        private readonly MicrosoftAuth _microsoftAuth;
         public StudentManager(IConfiguration configuration, MicrosoftAuth microsoftAuth)
         {
-            this.configuration = configuration;
-            this.context = new ClientContext(configuration["SharepointInfo:SiteUrl"]);
-            this.microsoftAuth=microsoftAuth;
-            context.ExecutingWebRequest += (sender, args) =>
+            _configuration = configuration;
+            _context = new ClientContext(_configuration["SharepointInfo:SiteUrl"]);
+            _microsoftAuth=microsoftAuth;
+            _context.ExecutingWebRequest += (sender, args) =>
             {
                 args.WebRequestExecutor.RequestHeaders["Authorization"] =
-                    "Bearer " + microsoftAuth.GetAccessTokenAsync();
+                    "Bearer " + _microsoftAuth.GetAccessTokenAsync();
             };
         }
 
@@ -26,7 +26,7 @@ namespace TestCsom.Manager
         {
             try
             {                
-                List studentList = context.Web.Lists.GetByTitle("Students");
+                List studentList = _context.Web.Lists.GetByTitle("Students");
                 CamlQuery query = new CamlQuery
                 {
                     ViewXml = @"
@@ -39,8 +39,8 @@ namespace TestCsom.Manager
 
                 // Get student list items
                 ListItemCollection studentItems = studentList.GetItems(query);
-                context.Load(studentItems);
-                await context.ExecuteQueryAsync();
+                _context.Load(studentItems);
+                await _context.ExecuteQueryAsync();
 
                 var result = new List<StudentDto>();
 
@@ -57,10 +57,10 @@ namespace TestCsom.Manager
                         FieldLookupValue departmentLookup = (FieldLookupValue)studentItem["Dep_Id"];
 
                         // Get the department name from the "department" list
-                        List departmentList = context.Web.Lists.GetByTitle("Department");
+                        List departmentList = _context.Web.Lists.GetByTitle("Department");
                         ListItem departmentItem = departmentList.GetItemById(departmentLookup.LookupId);
-                        context.Load(departmentItem);
-                        await context.ExecuteQueryAsync();
+                        _context.Load(departmentItem);
+                        await _context.ExecuteQueryAsync();
 
                         student.DepartmentName = departmentItem["Title"]?.ToString();
                     }
